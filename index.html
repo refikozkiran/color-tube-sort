@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Color Tube Sort</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&family=Black+Ops+One&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#3b3f72;--bg2:#2e3260;
+  --bottle-w:62px;--bottle-h:180px;--cap-h:22px;
+}
+body{
+  background:var(--bg);font-family:'Nunito',sans-serif;color:#fff;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  overflow-x:hidden;user-select:none;
+}
+
+/* ══ SCREENS ══ */
+.screen{display:none;flex-direction:column;align-items:center;width:100%;max-width:480px;min-height:100vh;}
+.screen.active{display:flex;}
+
+/* ══ MENU SCREEN ══ */
+
+/* animated canvas background */
+#menu-canvas{
+  position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;
+}
+
+.menu-wrap{
+  position:relative;z-index:2;
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:0 22px 36px;gap:0;width:100%;
+}
+
+/* ── HERO SECTION ── */
+.menu-hero{
+  display:flex;flex-direction:column;align-items:center;
+  width:100%;padding-top:20px;margin-bottom:10px;
+}
+
+.menu-logo-wrap{
+  text-align:center;margin-bottom:10px;
+  animation:heroIn .9s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes heroIn{
+  from{opacity:0;transform:translateY(40px) scale(.85);}
+  to{opacity:1;transform:translateY(0) scale(1);}
+}
+
+.menu-logo-eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:4px;text-transform:uppercase;
+  color:rgba(255,255,255,.4);margin-bottom:10px;
+  animation:heroIn .7s .1s both;
+}
+
+.menu-logo{
+  font-family:'Black Ops One',sans-serif;
+  font-size:48px;line-height:.95;text-align:center;
+  background:linear-gradient(160deg,#ffffff 0%,#ffe8f8 30%,#ff6eb4 60%,#ffd460 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 40px rgba(255,110,180,.5));
+  animation:heroIn .8s .15s both;
+}
+
+.menu-logo sub{
+  font-size:22px;vertical-align:baseline;
+  background:linear-gradient(135deg,#ffd460,#ff9044);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+
+.menu-tagline{
+  font-size:13px;letter-spacing:1.5px;text-transform:uppercase;
+  color:rgba(255,255,255,.35);margin-top:14px;
+  animation:heroIn .7s .3s both;
+}
+
+/* ── DECORATIVE BOTTLES ── */
+.deco-bottles{
+  display:flex;gap:14px;align-items:flex-end;margin:14px 0 0;
+  animation:heroIn 1s .4s both;
+}
+.deco-bottle{
+  width:34px;border-radius:0 0 14px 14px;
+  position:relative;overflow:hidden;
+  background:rgba(255,255,255,.08);
+  border:1.5px solid rgba(255,255,255,.18);
+}
+.deco-bottle::before{
+  content:'';position:absolute;top:0;left:4px;width:4px;height:60%;
+  background:linear-gradient(180deg,rgba(255,255,255,.25),transparent);border-radius:2px;
+}
+.deco-seg{width:100%;}
+
+/* ── STATS ROW ── */
+.menu-stats-row{
+  display:flex;gap:10px;width:100%;margin-bottom:16px;
+  animation:heroIn .7s .5s both;
+}
+.mini-stat{
+  flex:1;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:20px;padding:16px 8px 14px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.mini-stat-val{
+  font-family:'Black Ops One',sans-serif;
+  font-size:24px;line-height:1.1;color:#fff;
+}
+.mini-stat-label{
+  font-size:10px;font-weight:700;color:rgba(255,255,255,.35);
+  letter-spacing:.5px;text-transform:uppercase;line-height:1.4;margin-top:2px;
+}
+
+/* ── PLAY BUTTON ── */
+.menu-play-btn{
+  width:100%;padding:0;border:none;cursor:pointer;
+  background:none;margin-bottom:12px;border-radius:28px;
+  animation:heroIn .7s .6s both;
+  position:relative;
+}
+.menu-play-btn:active .play-btn-inner{transform:scale(.97);}
+@keyframes glowPulse{
+  0%,100%{opacity:.5;}50%{opacity:.9;}
+}
+/* outer glow */
+.play-glow{
+  position:absolute;inset:0;border-radius:28px;
+  background:linear-gradient(135deg,#ff6eb4,#c454ff,#ffd460);
+  filter:blur(18px);opacity:.5;
+  animation:glowPulse 2.5s ease-in-out infinite;
+  z-index:0;pointer-events:none;
+}
+.play-btn-inner{
+  position:relative;z-index:1;
+  width:100%;height:76px;border-radius:28px;
+  /* full gradient fill */
+  background:linear-gradient(115deg,#ff6eb4 0%,#d44fff 50%,#ffd460 100%);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px 0 24px;
+  overflow:hidden;
+  transition:transform .12s;
+  /* inner top shine */
+  box-shadow:0 2px 0 rgba(255,255,255,.25) inset,
+             0 -2px 0 rgba(0,0,0,.15) inset;
+}
+/* shine sweep */
+.play-btn-inner::before{
+  content:'';position:absolute;
+  top:-40%;left:-20%;width:60%;height:180%;
+  background:linear-gradient(110deg,transparent,rgba(255,255,255,.18),transparent);
+  transform:skewX(-20deg);pointer-events:none;
+}
+.play-left{display:flex;align-items:center;gap:14px;}
+/* play triangle icon */
+.play-icon-circle{
+  width:44px;height:44px;border-radius:50%;
+  background:rgba(255,255,255,.22);
+  border:2px solid rgba(255,255,255,.35);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.play-triangle{
+  width:0;height:0;
+  border-top:9px solid transparent;
+  border-bottom:9px solid transparent;
+  border-left:16px solid #fff;
+  margin-left:3px;
+}
+.play-texts{text-align:left;}
+.play-label{
+  font-family:'Black Ops One',sans-serif;
+  font-size:28px;color:#fff;line-height:1;
+  text-shadow:0 2px 12px rgba(0,0,0,.25);
+  letter-spacing:1px;
+}
+.play-sub{
+  font-size:11px;font-weight:700;
+  color:rgba(255,255,255,.75);
+  margin-top:3px;letter-spacing:.3px;
+}
+/* right arrow pill */
+.play-arrow-pill{
+  width:38px;height:38px;border-radius:14px;
+  background:rgba(255,255,255,.18);
+  border:1.5px solid rgba(255,255,255,.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:900;color:#fff;flex-shrink:0;
+}
+
+/* ── SECONDARY BUTTONS ── */
+.menu-secondary{
+  display:flex;gap:10px;width:100%;
+  animation:heroIn .7s .7s both;
+}
+.menu-sec-btn{
+  flex:1;padding:0;border:none;cursor:pointer;
+  border-radius:22px;background:none;
+  font-family:'Nunito',sans-serif;transition:.15s;
+}
+.menu-sec-btn:active{transform:scale(.95);}
+.sec-inner{
+  width:100%;padding:18px 14px 16px;
+  border-radius:22px;
+  display:flex;flex-direction:column;align-items:flex-start;gap:0;
+  position:relative;overflow:hidden;
+  transition:opacity .15s;
+}
+.menu-sec-btn:active .sec-inner{opacity:.8;}
+
+/* card backgrounds */
+.sec-inner.lvl-card{
+  background:linear-gradient(135deg,#1a2a4a 0%,#0f1c38 100%);
+  border:1.5px solid rgba(77,184,255,.2);
+}
+.sec-inner.stat-card{
+  background:linear-gradient(135deg,#2a1a3e 0%,#1c0f30 100%);
+  border:1.5px solid rgba(166,120,245,.2);
+}
+/* top-right color accent dot */
+.sec-inner::before{
+  content:'';position:absolute;top:-20px;right:-20px;
+  width:70px;height:70px;border-radius:50%;
+  opacity:.25;filter:blur(20px);
+}
+.sec-inner.lvl-card::before{background:#4db8ff;}
+.sec-inner.stat-card::before{background:#a678f5;}
+
+/* SVG icon row */
+.sec-icon-row{
+  display:flex;align-items:center;justify-content:space-between;
+  width:100%;margin-bottom:12px;
+}
+.sec-svg-icon{
+  width:36px;height:36px;border-radius:11px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.sec-svg-icon.blue{background:rgba(77,184,255,.18);border:1px solid rgba(77,184,255,.3);}
+.sec-svg-icon.purple{background:rgba(166,120,245,.18);border:1px solid rgba(166,120,245,.3);}
+.sec-arrow{
+  font-size:18px;color:rgba(255,255,255,.25);font-weight:900;
+}
+.sec-label{
+  font-size:15px;font-weight:900;color:#fff;
+  letter-spacing:.2px;margin-bottom:3px;
+}
+.sec-sub{
+  font-size:11px;font-weight:700;
+  letter-spacing:.4px;text-transform:uppercase;
+}
+.sec-sub.blue{color:rgba(77,184,255,.6);}
+.sec-sub.purple{color:rgba(166,120,245,.6);}
+
+/* ══ HEADER (game) ══ */
+header{
+  width:100%;max-width:480px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px 6px;flex-shrink:0;
+}
+.back-btn{
+  width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.12);
+  border:none;color:#fff;font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:.15s;
+}
+.back-btn:active{transform:scale(.9);}
+.level-title{font-size:16px;font-weight:900;}
+.hud{display:flex;gap:8px;align-items:center;}
+.hud-pill{
+  background:rgba(255,255,255,.12);border-radius:20px;padding:5px 12px;
+  font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;
+}
+
+/* ══ PROGRESS BAR ══ */
+.level-bar{
+  width:calc(100% - 32px);max-width:448px;
+  display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-shrink:0;
+}
+.level-label{font-size:11px;font-weight:700;opacity:.5;white-space:nowrap;}
+.bar-track{flex:1;height:6px;background:rgba(255,255,255,.15);border-radius:10px;overflow:hidden;}
+.bar-fill{height:100%;background:linear-gradient(90deg,#ff6eb4,#ffd460);border-radius:10px;transition:.4s;}
+
+/* ══ BOTTLES GRID ══ */
+.grid-wrap{
+  width:100%;max-width:480px;display:flex;flex-direction:column;
+  align-items:center;padding:4px 10px 80px;flex:1;
+}
+.bottles-row{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:10px;width:100%;margin-bottom:10px;
+}
+
+/* ══ BOTTLE ══ */
+.bottle-wrap{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  cursor:pointer;transition:transform .15s;position:relative;
+}
+.bottle-wrap:active{transform:scale(.95);}
+.bottle-wrap.selected{transform:translateY(-12px);}
+.bottle-wrap.selected .body{
+  box-shadow:0 0 0 2.5px #fff,0 0 20px rgba(255,255,255,.4);
+}
+.bottle-wrap.completed{opacity:.55;cursor:default;}
+.bottle-wrap.completed .body{box-shadow:0 0 10px rgba(100,255,150,.5);}
+.bottle{width:var(--bottle-w);height:var(--bottle-h);position:relative;display:flex;flex-direction:column;align-items:center;}
+.neck{
+  width:28px;height:var(--cap-h);background:rgba(255,255,255,.15);
+  border-radius:8px 8px 0 0;position:relative;z-index:2;
+  border:2px solid rgba(255,255,255,.22);border-bottom:none;flex-shrink:0;
+}
+.cap{
+  width:34px;height:9px;border-radius:6px 6px 0 0;
+  position:absolute;top:-9px;left:50%;transform:translateX(-50%);z-index:3;
+  transition:background .3s;
+}
+.body{
+  flex:1;width:100%;border-radius:0 0 28px 28px;
+  background:rgba(255,255,255,.11);border:2px solid rgba(255,255,255,.2);
+  border-top:none;overflow:hidden;position:relative;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  transition:box-shadow .2s;
+}
+.body::after{
+  content:'';position:absolute;top:0;left:7px;width:7px;height:65%;
+  background:linear-gradient(180deg,rgba(255,255,255,.2),transparent);
+  border-radius:4px;pointer-events:none;
+}
+.segments{width:100%;display:flex;flex-direction:column;justify-content:flex-end;height:100%;}
+.seg{width:100%;transition:height .3s ease;}
+.bottle-badge{font-size:11px;font-weight:700;color:rgba(255,255,255,.6);min-height:15px;text-align:center;}
+
+/* ══ UNDO BTN ══ */
+.undo-btn{
+  position:fixed;bottom:22px;right:18px;width:48px;height:48px;border-radius:50%;
+  background:rgba(255,255,255,.13);border:1.5px solid rgba(255,255,255,.2);
+  color:#fff;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:.15s;z-index:50;
+}
+.undo-btn:active{transform:scale(.9);}
+
+/* ══ WIN MODAL ══ */
+.overlay{
+  position:fixed;inset:0;background:rgba(15,17,45,.88);
+  display:flex;align-items:center;justify-content:center;
+  z-index:100;opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(8px);
+}
+.overlay.show{opacity:1;pointer-events:all;}
+.modal{
+  background:linear-gradient(145deg,#3e4285,#2b2f68);
+  border:2px solid rgba(255,255,255,.15);border-radius:28px;
+  padding:32px 24px;text-align:center;max-width:310px;width:90%;
+  transform:scale(.85);transition:transform .3s;
+}
+.overlay.show .modal{transform:scale(1);}
+.modal-emoji{font-size:52px;margin-bottom:8px;}
+.modal-title{font-size:24px;font-weight:900;margin-bottom:6px;}
+.modal-sub{font-size:13px;opacity:.65;margin-bottom:20px;line-height:1.5;}
+.btn{
+  width:100%;padding:13px;border:none;border-radius:14px;
+  font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;color:#fff;
+  background:linear-gradient(135deg,#ff6eb4,#ffd460);
+  transition:.15s;margin-top:7px;display:block;
+}
+.btn:active{transform:scale(.97);}
+.btn.ghost{background:rgba(255,255,255,.12);}
+.btn.danger{background:rgba(255,80,80,.2);}
+
+/* ══ STATS SCREEN ══ */
+.stats-screen{
+  background:linear-gradient(170deg,#0d0f2a 0%,#14173a 60%,#0a0c1e 100%);
+  min-height:100vh;
+}
+.screen-header{
+  width:100%;display:flex;align-items:center;gap:14px;
+  padding:52px 20px 20px;flex-shrink:0;
+}
+.screen-header-title{
+  font-family:'Black Ops One',sans-serif;
+  font-size:22px;letter-spacing:.5px;flex:1;
+}
+.screen-header-sub{
+  font-size:11px;font-weight:700;color:rgba(255,255,255,.35);
+  letter-spacing:1px;text-transform:uppercase;
+}
+
+/* header back btn override */
+.back-btn-dark{
+  width:38px;height:38px;border-radius:13px;
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.1);
+  color:#fff;font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:.15s;flex-shrink:0;
+}
+.back-btn-dark:active{transform:scale(.9);background:rgba(255,255,255,.12);}
+
+.stats-body{width:100%;padding:0 16px 30px;flex:1;overflow-y:auto;}
+
+.stats-empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;padding:80px 20px;text-align:center;
+}
+.stats-empty-icon{font-size:52px;opacity:.4;}
+.stats-empty-title{font-size:18px;font-weight:900;opacity:.5;}
+.stats-empty-sub{font-size:13px;opacity:.3;line-height:1.5;}
+
+/* stat card */
+.level-stat-card{
+  background:linear-gradient(135deg,rgba(255,255,255,.05) 0%,rgba(255,255,255,.02) 100%);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:20px;padding:16px;margin-bottom:10px;
+  display:flex;align-items:center;gap:14px;
+  transition:.12s;
+}
+.level-stat-card:active{transform:scale(.98);}
+
+.lsc-badge{
+  width:46px;height:46px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Black Ops One',sans-serif;font-size:17px;color:#fff;
+  flex-shrink:0;position:relative;overflow:hidden;
+}
+.lsc-badge::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.2) 0%,transparent 60%);
+}
+.lsc-info{flex:1;min-width:0;}
+.lsc-level{font-size:15px;font-weight:900;color:#fff;}
+.lsc-detail{font-size:11px;color:rgba(255,255,255,.35);margin-top:3px;font-weight:700;}
+
+.lsc-metrics{
+  display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;
+}
+.lsc-metric{
+  display:flex;align-items:center;gap:5px;
+}
+.lsc-metric-val{
+  font-family:'Black Ops One',sans-serif;
+  font-size:14px;
+}
+.lsc-metric-label{
+  font-size:10px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.3px;
+}
+
+.clear-btn{
+  margin:20px 0 0;display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:14px;border:none;border-radius:16px;
+  background:rgba(255,80,80,.1);
+  border:1px solid rgba(255,80,80,.2);
+  color:rgba(255,120,120,.8);font-size:13px;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:.15s;letter-spacing:.3px;
+}
+.clear-btn:active{transform:scale(.97);background:rgba(255,80,80,.18);}
+
+/* ══ LEVEL SELECT SCREEN ══ */
+.lvl-screen{
+  background:linear-gradient(170deg,#0d0f2a 0%,#14173a 60%,#0a0c1e 100%);
+  min-height:100vh;
+}
+.lvl-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  width:100%;padding:0 16px 30px;
+}
+
+.lvl-cell{
+  aspect-ratio:1;border-radius:18px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:.15s;gap:5px;
+  position:relative;overflow:hidden;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);
+}
+.lvl-cell:active{transform:scale(.92);}
+
+/* done cells get a color tint */
+.lvl-cell.done{
+  background:linear-gradient(135deg,rgba(255,110,180,.12),rgba(166,120,245,.1));
+  border-color:rgba(255,110,180,.25);
+}
+.lvl-cell.done::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.06) 0%,transparent 50%);
+}
+/* current = next to play */
+.lvl-cell.current{
+  background:linear-gradient(135deg,rgba(255,212,96,.15),rgba(255,144,68,.1));
+  border-color:rgba(255,212,96,.4);
+  box-shadow:0 0 16px rgba(255,212,96,.15);
+}
+.lvl-cell.locked{
+  opacity:.25;cursor:default;
+}
+.lvl-num{
+  font-family:'Black Ops One',sans-serif;
+  font-size:18px;color:#fff;position:relative;z-index:1;
+}
+/* star indicator */
+.lvl-indicator{
+  position:relative;z-index:1;
+  width:18px;height:18px;display:flex;align-items:center;justify-content:center;
+}
+/* lock icon for locked */
+.lvl-lock{
+  font-size:12px;opacity:.5;
+}
+
+/* ══ CONFETTI ══ */
+.confetti-piece{
+  position:fixed;border-radius:2px;opacity:0;pointer-events:none;
+  animation:fall 1.3s ease forwards;
+}
+@keyframes fall{
+  0%{opacity:1;transform:translate(0,0) rotate(0deg);}
+  100%{opacity:0;transform:translate(var(--tx),var(--ty)) rotate(720deg);}
+}
+
+/* ══ SHAKE ══ */
+@keyframes shake{
+  0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}
+}
+.shake-anim{animation:shake .3s ease;}
+</style>
+</head>
+<body>
+
+<!-- ══ MENU SCREEN ══ -->
+<div class="screen active" id="screen-menu">
+  <canvas id="menu-canvas"></canvas>
+
+  <div class="menu-wrap">
+    <!-- HERO -->
+    <div class="menu-hero">
+      <div class="menu-logo-wrap">
+        <div class="menu-logo">COLOR<br>TUBE SORT</div>
+        <div class="menu-tagline">Renkleri aynı şişeye dök</div>
+        <!-- text set dynamically by applyStaticStrings() -->
+      </div>
+
+      <!-- decorative animated bottles -->
+      <div class="deco-bottles" id="deco-bottles"></div>
+    </div>
+
+    <div style="height:10px;flex-shrink:0;"></div>
+
+    <!-- BIG PLAY BUTTON -->
+    <button class="menu-play-btn" onclick="resumeOrStart()">
+      <div class="play-glow"></div>
+      <div class="play-btn-inner">
+        <div class="play-left">
+          <div class="play-icon-circle"><div class="play-triangle"></div></div>
+          <div class="play-texts">
+            <div class="play-label">OYNA</div>
+            <div class="play-sub" id="menu-play-sub">Başlamak için dokun</div>
+          </div>
+        </div>
+        <div class="play-arrow-pill">›</div>
+      </div>
+    </button>
+
+    <!-- SECONDARY -->
+    <div class="menu-secondary">
+      <button class="menu-sec-btn" onclick="showScreen('screen-levels')">
+        <div class="sec-inner lvl-card">
+          <div class="sec-icon-row">
+            <div class="sec-svg-icon blue">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="3" width="7" height="7" rx="2" fill="#4db8ff" opacity=".9"/>
+                <rect x="14" y="3" width="7" height="7" rx="2" fill="#4db8ff" opacity=".6"/>
+                <rect x="3" y="14" width="7" height="7" rx="2" fill="#4db8ff" opacity=".6"/>
+                <rect x="14" y="14" width="7" height="7" rx="2" fill="#4db8ff" opacity=".3"/>
+              </svg>
+            </div>
+            <div class="sec-arrow">›</div>
+          </div>
+          <div class="sec-label">Seviyeler</div>
+          <div class="sec-sub blue" id="sec-level-sub">TÜM SEVİYELER</div>
+        </div>
+      </button>
+      <button class="menu-sec-btn" onclick="showScreen('screen-stats')">
+        <div class="sec-inner stat-card">
+          <div class="sec-icon-row">
+            <div class="sec-svg-icon purple">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="13" width="4" height="8" rx="1.5" fill="#a678f5"/>
+                <rect x="10" y="8" width="4" height="13" rx="1.5" fill="#a678f5" opacity=".8"/>
+                <rect x="17" y="3" width="4" height="18" rx="1.5" fill="#a678f5" opacity=".6"/>
+              </svg>
+            </div>
+            <div class="sec-arrow">›</div>
+          </div>
+          <div class="sec-label">İstatistik</div>
+          <div class="sec-sub purple" id="sec-stats-sub">SONUÇLARINI GÖR</div>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GAME SCREEN ══ -->
+<div class="screen" id="screen-game">
+  <header>
+    <button class="back-btn" onclick="goMenu()">‹</button>
+    <div class="level-title" id="level-title">Seviye 1</div>
+    <div class="hud">
+      <div class="hud-pill">🔄 <span id="moves">0</span></div>
+      <div class="hud-pill">⏱ <span id="timer">0</span>s</div>
+      <button class="back-btn" onclick="startGame(G.level)" style="margin-left:2px" id="restart-btn" title="Yeniden">↺</button>
+    </div>
+  </header>
+  <div class="level-bar">
+    <span class="level-label">İLERLEME</span>
+    <div class="bar-track"><div class="bar-fill" id="prog-fill" style="width:0%"></div></div>
+    <span class="level-label" id="prog-label">0/0</span>
+  </div>
+  <div class="grid-wrap" id="grid-wrap"></div>
+  <button class="undo-btn" id="undo-btn" onclick="undo()" title="Geri Al">↩</button>
+</div>
+
+<!-- ══ STATS SCREEN ══ -->
+<div class="screen stats-screen" id="screen-stats">
+  <div class="screen-header">
+    <button class="back-btn-dark" onclick="showScreen('screen-menu')">‹</button>
+    <div>
+      <div class="screen-header-title">İstatistikler</div>
+      <div class="screen-header-sub">Tüm seviye kayıtların</div>
+    </div>
+  </div>
+  <div class="stats-body" id="stats-body"></div>
+</div>
+
+<!-- ══ LEVEL SELECT SCREEN ══ -->
+<div class="screen lvl-screen" id="screen-levels">
+  <div class="screen-header">
+    <button class="back-btn-dark" onclick="showScreen('screen-menu')">‹</button>
+    <div>
+      <div class="screen-header-title">Seviyeler</div>
+      <div class="screen-header-sub" id="lvl-header-sub">Bir seviye seç</div>
+    </div>
+  </div>
+  <div class="lvl-grid" id="lvl-grid"></div>
+</div>
+
+<!-- ══ WIN OVERLAY ══ -->
+<div class="overlay" id="win-ov">
+  <div class="modal">
+    <div class="modal-emoji">🎉</div>
+    <div class="modal-title">Tebrikler!</div>
+    <div class="modal-sub" id="win-sub"></div>
+    <button class="btn" id="btn-next" onclick="nextLevel()">Sonraki Seviye →</button>
+    <button class="btn ghost" onclick="startGame(G.level)">Tekrar Oyna</button>
+    <button class="btn ghost" onclick="goMenu()">Ana Menü</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+//  i18n — LANGUAGE DETECTION & STRINGS
+// ════════════════════════════════════════════════════════
+(function detectLang() {
+  // 1) URL param: ?lang=en  or  ?lang=tr
+  const urlLang = new URLSearchParams(location.search).get('lang');
+  // 2) localStorage key set by the main site
+  const storedLang = localStorage.getItem('lang') || localStorage.getItem('selectedLang') || localStorage.getItem('appLang');
+  // 3) referrer hash / sessionStorage fallback
+  const sessionLang = sessionStorage.getItem('lang');
+  const chosen = urlLang || storedLang || sessionLang || 'tr';
+  window.LANG = chosen.startsWith('en') ? 'en' : 'tr';
+})();
+
+const STRINGS = {
+  tr: {
+    tagline:          'Renkleri aynı şişeye dök',
+    playLabel:        'OYNA',
+    playSubFirst:     'İlk seviyeyi oyna',
+    playSubContinue:  (n) => `Seviye ${n} · Kaldığın yerden devam et`,
+    levelsLabel:      'Seviyeler',
+    levelsSubAll:     'TÜM SEVİYELER',
+    levelsSubDone:    (h,m) => `${h}/${m} TAMAMLANDI`,
+    statsLabel:       'İstatistik',
+    statsSubDefault:  'SONUÇLARINI GÖR',
+    statsSubDone:     (n) => `${n} SEVİYE KAYITLI`,
+    levelTitle:       (n) => `Seviye ${n}`,
+    progressLabel:    'İLERLEME',
+    statsScreenTitle: 'İstatistikler',
+    statsScreenSub:   'Tüm seviye kayıtların',
+    lvlScreenTitle:   'Seviyeler',
+    lvlHeaderSub:     (h,m) => h > 0 ? `${h} / ${m} tamamlandı` : 'Bir seviye seç',
+    lvlHeaderSubDefault: 'Bir seviye seç',
+    statsEmpty:       'Henüz oynanmadı',
+    statsEmptySub:    'Seviyeleri tamamladıkça<br>kayıtların burada görünür.',
+    statPlayed:       (n) => `${n}× oynandı`,
+    statFastest:      'EN HIZLI',
+    statLeastMoves:   'EN AZ HAMLE',
+    clearBtn:         'İstatistikleri Sıfırla',
+    clearConfirm:     'Tüm istatistikler silinecek. Emin misin?',
+    winTitle:         'Tebrikler!',
+    winSub:           (l,s,m) => `Seviye ${l} · ⏱ ${s}s · 🔄 ${m} hamle`,
+    btnNext:          'Sonraki Seviye →',
+    btnReplay:        'Tekrar Oyna',
+    btnMenu:          'Ana Menü',
+    undoTitle:        'Geri Al',
+    restartTitle:     'Yeniden',
+  },
+  en: {
+    tagline:          'Sort the colors into bottles',
+    playLabel:        'PLAY',
+    playSubFirst:     'Start your first level',
+    playSubContinue:  (n) => `Level ${n} · Continue where you left off`,
+    levelsLabel:      'Levels',
+    levelsSubAll:     'ALL LEVELS',
+    levelsSubDone:    (h,m) => `${h}/${m} COMPLETED`,
+    statsLabel:       'Stats',
+    statsSubDefault:  'SEE YOUR RESULTS',
+    statsSubDone:     (n) => `${n} LEVELS RECORDED`,
+    levelTitle:       (n) => `Level ${n}`,
+    progressLabel:    'PROGRESS',
+    statsScreenTitle: 'Statistics',
+    statsScreenSub:   'All your level records',
+    lvlScreenTitle:   'Levels',
+    lvlHeaderSub:     (h,m) => h > 0 ? `${h} / ${m} completed` : 'Choose a level',
+    lvlHeaderSubDefault: 'Choose a level',
+    statsEmpty:       'Not played yet',
+    statsEmptySub:    'Complete levels to see<br>your records here.',
+    statPlayed:       (n) => `played ${n}×`,
+    statFastest:      'FASTEST',
+    statLeastMoves:   'LEAST MOVES',
+    clearBtn:         'Reset Statistics',
+    clearConfirm:     'All statistics will be deleted. Are you sure?',
+    winTitle:         'Congratulations!',
+    winSub:           (l,s,m) => `Level ${l} · ⏱ ${s}s · 🔄 ${m} moves`,
+    btnNext:          'Next Level →',
+    btnReplay:        'Play Again',
+    btnMenu:          'Main Menu',
+    undoTitle:        'Undo',
+    restartTitle:     'Restart',
+  }
+};
+
+function t(key, ...args) {
+  const s = STRINGS[window.LANG][key];
+  return typeof s === 'function' ? s(...args) : s;
+}
+
+// Apply static strings to HTML elements once DOM is ready
+function applyStaticStrings() {
+  // tagline
+  const taglineEl = document.querySelector('.menu-tagline');
+  if (taglineEl) taglineEl.textContent = t('tagline');
+  // play label
+  const playLabelEl = document.querySelector('.play-label');
+  if (playLabelEl) playLabelEl.textContent = t('playLabel');
+  // levels / stats card labels
+  const secLabels = document.querySelectorAll('.sec-label');
+  if (secLabels[0]) secLabels[0].textContent = t('levelsLabel');
+  if (secLabels[1]) secLabels[1].textContent = t('statsLabel');
+  // stats screen header
+  const statsTitle = document.querySelector('#screen-stats .screen-header-title');
+  if (statsTitle) statsTitle.textContent = t('statsScreenTitle');
+  const statsSub = document.querySelector('#screen-stats .screen-header-sub');
+  if (statsSub) statsSub.textContent = t('statsScreenSub');
+  // levels screen header
+  const lvlTitle = document.querySelector('#screen-levels .screen-header-title');
+  if (lvlTitle) lvlTitle.textContent = t('lvlScreenTitle');
+  // progress bar label
+  const progLabel = document.querySelector('.level-label');
+  if (progLabel) progLabel.textContent = t('progressLabel');
+  // undo / restart button titles
+  const undoBtnEl = document.getElementById('undo-btn');
+  if (undoBtnEl) undoBtnEl.title = t('undoTitle');
+  const restartBtnEl = document.getElementById('restart-btn');
+  if (restartBtnEl) restartBtnEl.title = t('restartTitle');
+  // win modal
+  const winTitle = document.querySelector('#win-ov .modal-title');
+  if (winTitle) winTitle.textContent = t('winTitle');
+  const btnNext = document.getElementById('btn-next');
+  if (btnNext) btnNext.textContent = t('btnNext');
+  const winBtns = document.querySelectorAll('#win-ov .btn.ghost');
+  if (winBtns[0]) winBtns[0].textContent = t('btnReplay');
+  if (winBtns[1]) winBtns[1].textContent = t('btnMenu');
+}
+
+// ════════════════════════════════════════════════════════
+//  COLORS
+// ════════════════════════════════════════════════════════
+const COLORS = [
+  {id:'pink',   hex:'#ff6eb4'},
+  {id:'blue',   hex:'#4db8ff'},
+  {id:'green',  hex:'#6ee86e'},
+  {id:'yellow', hex:'#ffd460'},
+  {id:'orange', hex:'#ff9044'},
+  {id:'purple', hex:'#a678f5'},
+  {id:'red',    hex:'#ff5c5c'},
+  {id:'teal',   hex:'#38d9c0'},
+  {id:'lime',   hex:'#b3e83a'},
+];
+
+const MAX_LEVEL = 20;
+
+// ════════════════════════════════════════════════════════
+//  LEVEL CONFIG
+// ════════════════════════════════════════════════════════
+function getLevelCfg(level) {
+  const colors = Math.min(2 + Math.floor((level - 1) / 2), COLORS.length);
+  const empty  = level <= 3 ? 2 : level <= 8 ? 2 : 3;
+  return { colors, empty, bottles: colors + empty, segs: 4 };
+}
+
+// ════════════════════════════════════════════════════════
+//  STORAGE — stats & progress
+// ════════════════════════════════════════════════════════
+const STORAGE_KEY = 'renkSirala_stats';
+const PROGRESS_KEY = 'renkSirala_progress';
+
+function loadStats() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch { return {}; }
+}
+function saveStats(stats) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
+}
+function recordResult(level, seconds, moves) {
+  const stats = loadStats();
+  const key = String(level);
+  const prev = stats[key];
+  const entry = {
+    level,
+    seconds,
+    moves,
+    date: new Date().toISOString(),
+    bestSeconds: prev ? Math.min(prev.bestSeconds, seconds) : seconds,
+    bestMoves:   prev ? Math.min(prev.bestMoves, moves)   : moves,
+    plays: prev ? prev.plays + 1 : 1,
+  };
+  stats[key] = entry;
+  saveStats(stats);
+}
+function getHighestLevel() {
+  const stats = loadStats();
+  const keys = Object.keys(stats).map(Number);
+  return keys.length ? Math.max(...keys) : 0;
+}
+function loadProgress() {
+  try { return JSON.parse(localStorage.getItem(PROGRESS_KEY)) || { level: 1 }; }
+  catch { return { level: 1 }; }
+}
+function saveProgress(level) {
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify({ level }));
+}
+
+// ════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════
+let G = {
+  level: 1, bottles: [], selected: null,
+  moves: 0, seconds: 0, timerH: null,
+  history: [], running: false,
+};
+
+// ════════════════════════════════════════════════════════
+//  SCREEN NAVIGATION
+// ════════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  hideOverlays();
+}
+
+function goMenu() {
+  clearInterval(G.timerH);
+  G.running = false;
+  showScreen('screen-menu');
+  renderMenuScreen();
+}
+
+function resumeOrStart() {
+  const highest = getHighestLevel();
+  const nextLevel = highest + 1;
+  startGame(Math.min(nextLevel, MAX_LEVEL));
+}
+
+// ════════════════════════════════════════════════════════
+//  MENU SCREEN
+// ════════════════════════════════════════════════════════
+function renderMenuScreen() {
+  const stats = loadStats();
+  const keys = Object.keys(stats).map(Number);
+  const highest = keys.length ? Math.max(...keys) : 0;
+
+  const nextLevel = Math.min(highest + 1, MAX_LEVEL);
+  document.getElementById('menu-play-sub').textContent =
+    highest === 0 ? t('playSubFirst') : t('playSubContinue', nextLevel);
+
+  const secLvl = document.getElementById('sec-level-sub');
+  const secSt  = document.getElementById('sec-stats-sub');
+  if (secLvl) secLvl.textContent = highest > 0 ? t('levelsSubDone', highest, MAX_LEVEL) : t('levelsSubAll');
+  if (secSt)  secSt.textContent  = highest > 0 ? t('statsSubDone', keys.length) : t('statsSubDefault');
+}
+
+// ════════════════════════════════════════════════════════
+//  STATS SCREEN
+// ════════════════════════════════════════════════════════
+// badge gradient palette cycling per level
+const BADGE_GRADIENTS = [
+  'linear-gradient(135deg,#ff6eb4,#ff4090)',
+  'linear-gradient(135deg,#4db8ff,#2090e0)',
+  'linear-gradient(135deg,#a678f5,#7040d0)',
+  'linear-gradient(135deg,#ffd460,#ff9044)',
+  'linear-gradient(135deg,#38d9c0,#10a890)',
+  'linear-gradient(135deg,#ff5c5c,#d02020)',
+  'linear-gradient(135deg,#6ee86e,#30b030)',
+  'linear-gradient(135deg,#b3e83a,#80b010)',
+];
+
+function renderStatsScreen() {
+  const stats = loadStats();
+  const body = document.getElementById('stats-body');
+  const keys = Object.keys(stats).map(Number).sort((a,b) => a-b);
+
+  if (keys.length === 0) {
+    body.innerHTML = `<div class="stats-empty">
+      <div class="stats-empty-icon">🎮</div>
+      <div class="stats-empty-title">${t('statsEmpty')}</div>
+      <div class="stats-empty-sub">${t('statsEmptySub')}</div>
+    </div>`;
+    return;
+  }
+
+  let html = '';
+  keys.forEach(k => {
+    const s = stats[k];
+    const d = new Date(s.date);
+    const dateStr = `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getFullYear()}`;
+    const grad = BADGE_GRADIENTS[(k - 1) % BADGE_GRADIENTS.length];
+    html += `<div class="level-stat-card">
+      <div class="lsc-badge" style="background:${grad}">${k}</div>
+      <div class="lsc-info">
+        <div class="lsc-level">${t('levelTitle', k)}</div>
+        <div class="lsc-detail">${t('statPlayed', s.plays)} &nbsp;·&nbsp; ${dateStr}</div>
+      </div>
+      <div class="lsc-metrics">
+        <div class="lsc-metric">
+          <div class="lsc-metric-val" style="color:#ffd460">${s.bestSeconds}s</div>
+          <div class="lsc-metric-label">${t('statFastest')}</div>
+        </div>
+        <div class="lsc-metric">
+          <div class="lsc-metric-val" style="color:#4db8ff">${s.bestMoves}</div>
+          <div class="lsc-metric-label">${t('statLeastMoves')}</div>
+        </div>
+      </div>
+    </div>`;
+  });
+  html += `<button class="clear-btn" onclick="clearStats()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="rgba(255,120,120,.7)" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    ${t('clearBtn')}
+  </button>`;
+  body.innerHTML = html;
+}
+
+function clearStats() {
+  if (!confirm(t('clearConfirm'))) return;
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(PROGRESS_KEY);
+  renderStatsScreen();
+  renderMenuScreen();
+}
+
+// ════════════════════════════════════════════════════════
+//  LEVEL SELECT SCREEN
+// ════════════════════════════════════════════════════════
+function renderLevelScreen() {
+  const stats = loadStats();
+  const highest = getHighestLevel();
+  const grid = document.getElementById('lvl-grid');
+  grid.innerHTML = '';
+
+  // update sub header
+  const sub = document.getElementById('lvl-header-sub');
+  if (sub) sub.textContent = t('lvlHeaderSub', highest, MAX_LEVEL);
+
+  for (let i = 1; i <= MAX_LEVEL; i++) {
+    const cell = document.createElement('div');
+    const done   = !!stats[i];
+    const isCurr = (i === highest + 1) || (highest === 0 && i === 1);
+    const locked = i > highest + 1;
+    cell.className = 'lvl-cell' +
+      (done ? ' done' : '') +
+      (isCurr && !done ? ' current' : '') +
+      (locked ? ' locked' : '');
+
+    const grad = BADGE_GRADIENTS[(i - 1) % BADGE_GRADIENTS.length];
+
+    // number with subtle gradient tint when done
+    const numStyle = done ? `background:${grad};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;` : '';
+
+    // indicator
+    let indicator = '';
+    if (done) {
+      indicator = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" fill="#ffd460" opacity=".9"/>
+      </svg>`;
+    } else if (locked) {
+      indicator = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+        <rect x="5" y="11" width="14" height="10" rx="2" fill="rgba(255,255,255,.2)"/>
+        <path d="M8 11V7a4 4 0 018 0v4" stroke="rgba(255,255,255,.2)" stroke-width="2"/>
+      </svg>`;
+    } else {
+      // current — small play triangle
+      indicator = `<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+        <path d="M2 1.5l7 3.5-7 3.5V1.5z" fill="#ffd460"/>
+      </svg>`;
+    }
+
+    cell.innerHTML = `<div class="lvl-num" style="${numStyle}">${i}</div>
+      <div class="lvl-indicator">${indicator}</div>`;
+
+    if (!locked) cell.onclick = () => { startGame(i); };
+    grid.appendChild(cell);
+  }
+}
+
+// ════════════════════════════════════════════════════════
+//  GAME START
+// ════════════════════════════════════════════════════════
+function startGame(level) {
+  clearInterval(G.timerH);
+  hideOverlays();
+  showScreen('screen-game');
+
+  const cfg = getLevelCfg(level);
+  const usedColors = COLORS.slice(0, cfg.colors);
+
+  let pool = [];
+  usedColors.forEach(c => { for (let i = 0; i < cfg.segs; i++) pool.push(c.id); });
+  shuffle(pool);
+
+  const bottles = [];
+  for (let i = 0; i < cfg.colors; i++) {
+    bottles.push({ id: i, segs: pool.splice(0, cfg.segs), maxSegs: cfg.segs });
+  }
+  for (let i = 0; i < cfg.empty; i++) {
+    bottles.push({ id: cfg.colors + i, segs: [], maxSegs: cfg.segs });
+  }
+
+  G = { level, bottles, selected: null, moves: 0, seconds: 0,
+        timerH: null, history: [], running: true };
+
+  document.getElementById('level-title').textContent = t('levelTitle', level);
+  renderAll(); updateHUD(); updateProgress();
+  startTimer();
+}
+
+function nextLevel() {
+  const next = G.level + 1;
+  if (next > MAX_LEVEL) { goMenu(); return; }
+  startGame(next);
+}
+
+// ════════════════════════════════════════════════════════
+//  TIMER
+// ════════════════════════════════════════════════════════
+function startTimer() {
+  clearInterval(G.timerH);
+  G.timerH = setInterval(() => {
+    if (!G.running) return;
+    G.seconds++;
+    document.getElementById('timer').textContent = G.seconds;
+  }, 1000);
+}
+
+// ════════════════════════════════════════════════════════
+//  GAME LOGIC
+// ════════════════════════════════════════════════════════
+function onBottleClick(id) {
+  if (!G.running) return;
+  const bottle = G.bottles.find(b => b.id === id);
+  if (!bottle) return;
+
+  if (G.selected === null) {
+    if (bottle.segs.length === 0) return;
+    G.selected = id; renderAll(); return;
+  }
+  if (G.selected === id) { G.selected = null; renderAll(); return; }
+
+  const from = G.bottles.find(b => b.id === G.selected);
+  const to   = bottle;
+
+  if (canPour(from, to)) {
+    G.history.push(deepClone(G.bottles));
+    pour(from, to);
+    G.moves++;
+    G.selected = null;
+    renderAll(); updateHUD(); updateProgress();
+    checkWin();
+  } else {
+    G.selected = bottle.segs.length > 0 ? id : null;
+    renderAll();
+    shakeBottle(id);
+  }
+}
+
+function canPour(from, to) {
+  if (from.segs.length === 0) return false;
+  if (to.segs.length >= to.maxSegs) return false;
+  if (to.segs.length === 0) return true;
+  return topColor(from) === topColor(to);
+}
+function topColor(b) { return b.segs[b.segs.length - 1]; }
+function pour(from, to) {
+  const color = topColor(from);
+  while (from.segs.length > 0 && topColor(from) === color && to.segs.length < to.maxSegs)
+    to.segs.push(from.segs.pop());
+}
+function isComplete(b) {
+  if (b.segs.length !== b.maxSegs) return false;
+  return b.segs.every(s => s === b.segs[0]);
+}
+function checkWin() {
+  const filled = G.bottles.filter(b => b.segs.length > 0);
+  if (!filled.every(b => isComplete(b))) return false;
+  clearInterval(G.timerH);
+  G.running = false;
+  recordResult(G.level, G.seconds, G.moves);
+  saveProgress(G.level);
+  setTimeout(() => {
+    confetti();
+    const isNew = !loadStats()[G.level + 1] && G.level < MAX_LEVEL;
+    document.getElementById('win-sub').textContent =
+      t('winSub', G.level, G.seconds, G.moves);
+    document.getElementById('btn-next').style.display =
+      G.level < MAX_LEVEL ? 'block' : 'none';
+    show('win-ov');
+  }, 400);
+  return true;
+}
+function undo() {
+  if (G.history.length === 0) return;
+  G.bottles  = G.history.pop();
+  G.selected = null;
+  G.moves    = Math.max(0, G.moves - 1);
+  renderAll(); updateHUD(); updateProgress();
+}
+
+// ════════════════════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════════════════════
+function renderAll() {
+  const wrap = document.getElementById('grid-wrap');
+  wrap.innerHTML = '';
+  const total = G.bottles.length;
+  const perRow = total <= 6 ? 3 : total <= 9 ? 3 : 4;
+  for (let i = 0; i < total; i += perRow) {
+    const row = document.createElement('div');
+    row.className = 'bottles-row';
+    G.bottles.slice(i, i + perRow).forEach(b => row.appendChild(makeBottleEl(b)));
+    wrap.appendChild(row);
+  }
+}
+
+function makeBottleEl(bottle) {
+  const wrap = document.createElement('div');
+  wrap.className = 'bottle-wrap' +
+    (G.selected === bottle.id ? ' selected' : '') +
+    (isComplete(bottle) && bottle.segs.length > 0 ? ' completed' : '');
+  wrap.onclick = () => onBottleClick(bottle.id);
+
+  const bottleDiv = document.createElement('div');
+  bottleDiv.className = 'bottle';
+  bottleDiv.id = `bottle-${bottle.id}`;
+
+  const neck = document.createElement('div');
+  neck.className = 'neck';
+  const cap = document.createElement('div');
+  cap.className = 'cap';
+  if (bottle.segs.length > 0) {
+    const c = getColor(topColor(bottle));
+    if (c) { cap.style.background = c.hex; cap.style.boxShadow = `0 0 8px ${c.hex}88`; }
+  }
+  neck.appendChild(cap);
+
+  const body = document.createElement('div');
+  body.className = 'body';
+  const segsDiv = document.createElement('div');
+  segsDiv.className = 'segments';
+  const segH = 100 / bottle.maxSegs;
+
+  // empty slots first (top = visual top)
+  const empty = bottle.maxSegs - bottle.segs.length;
+  for (let i = 0; i < empty; i++) {
+    const seg = document.createElement('div');
+    seg.className = 'seg';
+    seg.style.height = segH + '%';
+    segsDiv.appendChild(seg);
+  }
+  // filled segs bottom-to-top → render top-to-bottom reversed
+  for (let i = bottle.segs.length - 1; i >= 0; i--) {
+    const c = getColor(bottle.segs[i]);
+    const seg = document.createElement('div');
+    seg.className = 'seg';
+    seg.style.height = segH + '%';
+    if (c) seg.style.background = `linear-gradient(180deg,${lighten(c.hex,12)} 0%,${c.hex} 100%)`;
+    if (i < bottle.segs.length - 1) seg.style.borderTop = '1px solid rgba(0,0,0,.15)';
+    segsDiv.appendChild(seg);
+  }
+
+  body.appendChild(segsDiv);
+  bottleDiv.appendChild(neck);
+  bottleDiv.appendChild(body);
+  wrap.appendChild(bottleDiv);
+
+  const badge = document.createElement('div');
+  badge.className = 'bottle-badge';
+  if (isComplete(bottle) && bottle.segs.length > 0) { badge.textContent = '✓'; badge.style.color = '#6ee86e'; }
+  else if (G.selected === bottle.id) badge.textContent = '☝';
+  wrap.appendChild(badge);
+  return wrap;
+}
+
+function shakeBottle(id) {
+  const el = document.getElementById(`bottle-${id}`)?.closest('.bottle-wrap');
+  if (!el) return;
+  el.classList.remove('shake-anim');
+  void el.offsetWidth;
+  el.classList.add('shake-anim');
+  setTimeout(() => el.classList.remove('shake-anim'), 350);
+}
+
+function updateHUD() {
+  document.getElementById('moves').textContent = G.moves;
+}
+function updateProgress() {
+  const filled = G.bottles.filter(b => b.segs.length > 0);
+  const done   = filled.filter(b => isComplete(b)).length;
+  const pct    = filled.length ? (done / filled.length) * 100 : 0;
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = `${done}/${filled.length}`;
+}
+
+// ════════════════════════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════════════════════════
+function getColor(id) { return COLORS.find(c => c.id === id); }
+function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+function lighten(hex, amt) {
+  let r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  r = Math.min(255,r+amt); g = Math.min(255,g+amt); b = Math.min(255,b+amt);
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+}
+function show(id) { document.getElementById(id).classList.add('show'); }
+function hideOverlays() { document.querySelectorAll('.overlay').forEach(o => o.classList.remove('show')); }
+function confetti() {
+  const cols = COLORS.map(c => c.hex);
+  for (let i = 0; i < 55; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      const tx = (Math.random()-.5)*550, ty = Math.random()*500+100;
+      el.style.cssText = `left:${Math.random()*100}vw;top:28vh;
+        background:${cols[Math.floor(Math.random()*cols.length)]};
+        --tx:${tx}px;--ty:${ty}px;animation-delay:${Math.random()*.6}s;
+        width:${6+Math.random()*9}px;height:${6+Math.random()*9}px;
+        border-radius:${Math.random()>.5?'50%':'3px'};`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1900);
+    }, i * 25);
+  }
+}
+
+// ════════════════════════════════════════════════════════
+//  MENU CANVAS — particle / blob background
+// ════════════════════════════════════════════════════════
+(function initMenuCanvas() {
+  const canvas = document.getElementById('menu-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = () => canvas.width  = window.innerWidth;
+  const H = () => canvas.height = window.innerHeight;
+  W(); H();
+  window.addEventListener('resize', () => { W(); H(); });
+
+  // deep dark base
+  const palette = ['#ff6eb4','#ffd460','#4db8ff','#a678f5','#6ee86e','#ff9044','#38d9c0'];
+
+  // blobs
+  const blobs = Array.from({length:6}, (_, i) => ({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    r: 120 + Math.random() * 160,
+    col: palette[i % palette.length],
+    vx: (Math.random() - .5) * .4,
+    vy: (Math.random() - .5) * .35,
+    phase: Math.random() * Math.PI * 2,
+  }));
+
+  // particles
+  const particles = Array.from({length:38}, () => ({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    r: 2 + Math.random() * 4,
+    col: palette[Math.floor(Math.random()*palette.length)],
+    vy: -.3 - Math.random() * .5,
+    vx: (Math.random() - .5) * .3,
+    alpha: .4 + Math.random() * .4,
+    life: Math.random(),
+  }));
+
+  let raf;
+  function draw(t) {
+    if (!document.getElementById('screen-menu').classList.contains('active')) {
+      raf = requestAnimationFrame(draw); return;
+    }
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // background
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0,  '#0d0f2a');
+    grad.addColorStop(.5, '#16193a');
+    grad.addColorStop(1,  '#0a0c1e');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // blobs
+    blobs.forEach(b => {
+      b.x += b.vx; b.y += b.vy;
+      if (b.x < -b.r) b.x = W + b.r;
+      if (b.x > W + b.r) b.x = -b.r;
+      if (b.y < -b.r) b.y = H + b.r;
+      if (b.y > H + b.r) b.y = -b.r;
+      const pulse = 1 + .06 * Math.sin(t * .0008 + b.phase);
+      const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r * pulse);
+      g.addColorStop(0,   b.col + '22');
+      g.addColorStop(.5,  b.col + '10');
+      g.addColorStop(1,   'transparent');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r * pulse, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // grid lines (subtle)
+    ctx.strokeStyle = 'rgba(255,255,255,.025)';
+    ctx.lineWidth = 1;
+    const step = 48;
+    for (let x = 0; x < W; x += step) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y < H; y += step) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+
+    // particles
+    particles.forEach(p => {
+      p.y += p.vy; p.x += p.vx; p.life -= .004;
+      if (p.life <= 0) {
+        p.x = Math.random() * W; p.y = H + 10;
+        p.life = .6 + Math.random() * .4;
+        p.col = palette[Math.floor(Math.random()*palette.length)];
+      }
+      ctx.globalAlpha = p.alpha * Math.min(p.life * 3, 1);
+      ctx.fillStyle = p.col;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    raf = requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+
+// ════════════════════════════════════════════════════════
+//  DECO BOTTLES — animated mini bottles on menu hero
+// ════════════════════════════════════════════════════════
+(function buildDecoBottles() {
+  const palette = [
+    ['#ff6eb4','#ffd460','#4db8ff','#6ee86e'],
+    ['#a678f5','#ff9044','#38d9c0','#ff6eb4'],
+    ['#ffd460','#6ee86e','#ff9044','#a678f5'],
+    ['#4db8ff','#ff6eb4','#a678f5','#38d9c0'],
+    ['#6ee86e','#38d9c0','#ffd460','#ff6eb4'],
+  ];
+  const heights = [110, 130, 100, 120, 108];
+  const container = document.getElementById('deco-bottles');
+
+  palette.forEach((cols, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'deco-bottle';
+    wrap.style.height = heights[i] + 'px';
+    wrap.style.animationDelay = (i * .12) + 's';
+    wrap.style.animation = `decoFloat ${2.5 + i * .3}s ease-in-out ${i*.15}s infinite alternate`;
+
+    cols.forEach(col => {
+      const seg = document.createElement('div');
+      seg.className = 'deco-seg';
+      seg.style.height = (heights[i] / cols.length) + 'px';
+      seg.style.background = `linear-gradient(180deg,${lighten2(col,10)} 0%,${col} 100%)`;
+      wrap.appendChild(seg);
+    });
+    container.appendChild(wrap);
+  });
+
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes decoFloat {
+      from { transform: translateY(0px); }
+      to   { transform: translateY(-10px); }
+    }
+    .deco-bottle { animation: decoFloat 2.5s ease-in-out infinite alternate; }
+  `;
+  document.head.appendChild(style);
+})();
+
+function lighten2(hex, amt) {
+  let r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  r=Math.min(255,r+amt);g=Math.min(255,g+amt);b=Math.min(255,b+amt);
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+}
+
+// ════════════════════════════════════════════════════════
+//  BOOT — hook navigation, show menu
+// ════════════════════════════════════════════════════════
+
+// Re-render stats every time that screen is shown
+const origShowScreen = showScreen;
+window.showScreen = function(id) {
+  origShowScreen(id);
+  if (id === 'screen-stats')  renderStatsScreen();
+  if (id === 'screen-levels') renderLevelScreen();
+  if (id === 'screen-menu')   renderMenuScreen();
+};
+
+applyStaticStrings();
+renderMenuScreen();
+</script>
+</body>
+</html>
